@@ -121,6 +121,7 @@
       background-color: var(--header-bg);
       color: var(--header-text);
       padding: 14px 20px;
+      padding-top: max(14px, env(safe-area-inset-top)); /* reserves room for the phone's notch/status bar, same reasoning as the footer's bottom padding */
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -190,7 +191,7 @@
       display: flex;
       flex: 1;
       height: calc(100vh - 76px - 32px);
-      height: calc(100dvh - 76px - 32px - env(safe-area-inset-bottom)); /* same mobile address-bar fix as body, plus room for the footer's safe-area padding above */
+      height: calc(100dvh - 76px - 32px - env(safe-area-inset-bottom) - env(safe-area-inset-top)); /* same mobile address-bar fix as body, plus room for the header/footer's safe-area padding */
       position: relative;
     }
 
@@ -650,8 +651,9 @@
       </div>
       <button id="add-spot-btn" onclick="window.open('https://docs.google.com/forms/d/1DcF4YnOwRCDJNK3oZYk8chIFRcmAAOgVB7Z-T3NZUgQ/viewform', '_blank')" style="position:absolute; top:10px; left:10px; z-index:1000; background:var(--accent); color:var(--accent-text); border:none; border-radius:20px; padding:9px 16px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">📍 Add a Spot</button>
       <button id="add-tip-btn" onclick="window.open('https://docs.google.com/forms/d/1DcF4YnOwRCDJNK3oZYk8chIFRcmAAOgVB7Z-T3NZUgQ/viewform', '_blank')" style="position:absolute; top:56px; left:10px; z-index:1000; background:#f4a300; color:#111; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">💡 Add a Tip</button>
-      <button id="locate-me-btn" onclick="locateMe()" style="position:absolute; top:102px; left:10px; z-index:1000; background:#fff; color:#222; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🧭 Locate Me</button>
-      <button id="chase-route-btn" onclick="toggleChaseRouteMode()" style="position:absolute; top:148px; left:10px; z-index:1000; background:#6a4c93; color:#fff; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚗 Chase Route</button>
+      <button id="report-bug-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScdvVQHz33ZIihQqVfuHGIr4mHeAou51oJypHFwuRaAQOYaHQ/viewform', '_blank')" style="position:absolute; top:102px; left:10px; z-index:1000; background:#e76f51; color:#fff; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🐛 Report a Bug / Feature</button>
+      <button id="locate-me-btn" onclick="locateMe()" style="position:absolute; top:148px; left:10px; z-index:1000; background:#fff; color:#222; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🧭 Locate Me</button>
+      <button id="chase-route-btn" onclick="toggleChaseRouteMode()" style="position:absolute; top:194px; left:10px; z-index:1000; background:#6a4c93; color:#fff; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚗 Chase Route</button>
       <div id="add-spot-banner" style="display:none; position:absolute; top:192px; left:50%; transform:translateX(-50%); z-index:1000; background:rgba(0,0,0,0.85); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.8rem; font-weight:bold; text-align:center; white-space:nowrap;">Tap anywhere on the map to place your spot</div>
       <div id="add-tip-banner" style="display:none; position:absolute; top:192px; left:50%; transform:translateX(-50%); z-index:1000; background:rgba(0,0,0,0.85); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.8rem; font-weight:bold; text-align:center; white-space:nowrap;">Tap anywhere on the map to drop your tip</div>
       <div id="chase-route-banner" style="display:none; position:absolute; top:192px; left:50%; transform:translateX(-50%); z-index:1000; background:rgba(0,0,0,0.85); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.8rem; font-weight:bold; text-align:center; white-space:nowrap;">Tap your starting point</div>
