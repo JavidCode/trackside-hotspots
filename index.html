@@ -682,10 +682,6 @@
     </div>
     <div id="footer-admin-tools" style="display:none; margin-top:10px; gap:6px; flex-wrap:wrap; justify-content:center;">
       <button class="admin-toggle-btn" id="admin-center-btn" onclick="openAdminCenter()">🎛️ Admin Center</button>
-      <button class="admin-toggle-btn" id="sync-sheet-btn" onclick="syncFromGoogleSheet()">🔄 Sync Form Submissions</button>
-      <button class="admin-toggle-btn" id="sync-feedback-btn" onclick="syncFeedbackFromGoogleSheet()">🔄 Sync Feedback</button>
-      <button class="admin-toggle-btn" id="import-file-btn" onclick="document.getElementById('import-file-input').click()">📁 Import Spreadsheet</button>
-      <a href="#" id="import-template-link" onclick="downloadImportTemplate(); return false;" style="color:var(--accent); font-size:0.7rem; text-decoration:underline; align-self:center;">Template</a>
     </div>
     <div>© 2026 Trackside Hotspots · Not affiliated with any railroad</div>
   </footer>
@@ -834,7 +830,12 @@
         </div>
 
         <div id="admin-tab-content-spots" style="display:none;">
-          <button type="button" onclick="createNewSpotManually()" style="width:100%; background:#2a9d8f; color:#fff; border:none; padding:9px; border-radius:4px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-bottom:12px;">➕ Add New Spot</button>
+          <button type="button" onclick="createNewSpotManually()" style="width:100%; background:#2a9d8f; color:#fff; border:none; padding:9px; border-radius:4px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-bottom:8px;">➕ Add New Spot</button>
+          <div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+            <button type="button" id="sync-sheet-btn" onclick="syncFromGoogleSheet()" style="flex:1; min-width:140px; background:#023e8a; color:#fff; border:none; padding:8px; border-radius:4px; font-size:0.78rem; font-weight:bold; cursor:pointer;">🔄 Sync Form Submissions</button>
+            <button type="button" id="import-file-btn" onclick="document.getElementById('import-file-input').click()" style="flex:1; min-width:140px; background:#6a4c93; color:#fff; border:none; padding:8px; border-radius:4px; font-size:0.78rem; font-weight:bold; cursor:pointer;">📁 Import Spreadsheet</button>
+            <a href="#" id="import-template-link" onclick="downloadImportTemplate(); return false;" style="color:var(--accent); font-size:0.72rem; text-decoration:underline; align-self:center;">Template</a>
+          </div>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input type="text" id="all-entries-search" placeholder="Search by name, railroad, state…" oninput="renderAllEntriesPanel()" style="flex:1; margin-top:0; padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
             <select id="all-entries-status-filter" onchange="renderAllEntriesPanel()" style="padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
@@ -897,6 +898,7 @@
         </div>
 
         <div id="admin-tab-content-feedback" style="display:none;">
+          <button type="button" id="sync-feedback-btn" onclick="syncFeedbackFromGoogleSheet()" style="width:100%; background:#023e8a; color:#fff; border:none; padding:9px; border-radius:4px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-bottom:12px;">🔄 Sync Feedback</button>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <select id="feedback-type-filter" onchange="renderFeedbackPanel()" style="flex:1; padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
               <option value="">All Types</option>
