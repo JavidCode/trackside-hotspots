@@ -103,6 +103,13 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh; /* mobile fix: 100vh assumes the browser's address bar
+        is hidden, so it overestimates the real visible area whenever that
+        bar is showing -- pushes anything anchored to the bottom (like the
+        mobile Search & Spots / Legend buttons) below the actual visible
+        screen. dvh adjusts live as the browser chrome shows/hides. Older
+        browsers that don't understand dvh simply ignore this line and
+        keep using the vh value above. */
       background-color: var(--bg-main);
       color: #333;
       overflow: hidden;
@@ -183,6 +190,7 @@
       display: flex;
       flex: 1;
       height: calc(100vh - 76px - 32px);
+      height: calc(100dvh - 76px - 32px); /* same mobile address-bar fix as body */
       position: relative;
     }
 
@@ -639,8 +647,8 @@
         <div><span style="display:inline-block; width:20px; height:3px; background:#a0a0a0; vertical-align:middle;"></span> Disused rail line</div>
         <div><span style="display:inline-block; width:16px; height:16px; background:#023e8a; border-radius:50%; border:2px solid #fff; vertical-align:middle;"></span> Your location</div>
       </div>
-      <button id="add-spot-btn" onclick="toggleAddSpotMode()" style="position:absolute; top:10px; left:10px; z-index:1000; background:var(--accent); color:var(--accent-text); border:none; border-radius:20px; padding:9px 16px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">📍 Add a Spot</button>
-      <button id="add-tip-btn" onclick="toggleAddTipMode()" style="position:absolute; top:56px; left:10px; z-index:1000; background:#f4a300; color:#111; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">💡 Add a Tip</button>
+      <button id="add-spot-btn" onclick="window.open('https://docs.google.com/forms/d/1DcF4YnOwRCDJNK3oZYk8chIFRcmAAOgVB7Z-T3NZUgQ/viewform', '_blank')" style="position:absolute; top:10px; left:10px; z-index:1000; background:var(--accent); color:var(--accent-text); border:none; border-radius:20px; padding:9px 16px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">📍 Add a Spot</button>
+      <button id="add-tip-btn" onclick="window.open('https://docs.google.com/forms/d/1DcF4YnOwRCDJNK3oZYk8chIFRcmAAOgVB7Z-T3NZUgQ/viewform', '_blank')" style="position:absolute; top:56px; left:10px; z-index:1000; background:#f4a300; color:#111; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">💡 Add a Tip</button>
       <button id="locate-me-btn" onclick="locateMe()" style="position:absolute; top:102px; left:10px; z-index:1000; background:#fff; color:#222; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🧭 Locate Me</button>
       <button id="chase-route-btn" onclick="toggleChaseRouteMode()" style="position:absolute; top:148px; left:10px; z-index:1000; background:#6a4c93; color:#fff; border:none; border-radius:20px; padding:9px 14px; font-size:0.85rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚗 Chase Route</button>
       <div id="add-spot-banner" style="display:none; position:absolute; top:192px; left:50%; transform:translateX(-50%); z-index:1000; background:rgba(0,0,0,0.85); color:#fff; padding:8px 16px; border-radius:20px; font-size:0.8rem; font-weight:bold; text-align:center; white-space:nowrap;">Tap anywhere on the map to place your spot</div>
@@ -753,6 +761,41 @@
         <p style="margin-bottom:6px;"><strong>Restricted speed</strong> — a speed slow enough to stop within half the range of vision, short of a train, obstruction, or switch not properly lined.</p>
         <p style="margin-bottom:6px;"><strong>EOT / FRED</strong> — End-Of-Train device, a small unit on the last car (railfans often call it a "FRED") that monitors brake-pipe pressure and can flash a rear light.</p>
         <p style="margin-bottom:0;"><strong>AAR channel</strong> — a standardized radio channel number (per the Association of American Railroads) used for railroad voice communication, e.g. "Channel 20."</p>
+      </div>
+
+      <h4 style="font-size:0.85rem; margin-bottom:6px; color:#111;">Signals &amp; Dispatching</h4>
+      <div style="font-size:0.8rem; line-height:1.6; color:#333; margin-bottom:16px;">
+        <p style="margin-bottom:6px;"><strong>Absolute signal</strong> — a signal that must be fully obeyed; a train facing "Stop" at an absolute signal must remain stopped until the dispatcher authorizes movement or the signal changes.</p>
+        <p style="margin-bottom:6px;"><strong>Permissive signal</strong> — a signal where a train facing "Stop" may, after coming to a full stop, proceed cautiously at restricted speed. Usually marked with a number plate or the letter "I" at its base.</p>
+        <p style="margin-bottom:6px;"><strong>Interlocking</strong> — a junction where tracks, signals, and switches are all controlled as one unit, so only non-conflicting train movements can be lined up at the same time.</p>
+        <p style="margin-bottom:6px;"><strong>ABS (Automatic Block Signal)</strong> — a system that divides track into sections called "blocks" and automatically sets signal aspects based on whether each block is occupied.</p>
+        <p style="margin-bottom:0;"><strong>TWC (Track Warrant Control)</strong> — authorizing train movements by radio instead of (or alongside) wayside signals; the standard method used in dark territory.</p>
+      </div>
+
+      <h4 style="font-size:0.85rem; margin-bottom:6px; color:#111;">Movement &amp; Operations</h4>
+      <div style="font-size:0.8rem; line-height:1.6; color:#333; margin-bottom:16px;">
+        <p style="margin-bottom:6px;"><strong>Meet</strong> — when two trains headed in opposite directions on single track pass each other, usually with one holding in a siding while the other proceeds on the main.</p>
+        <p style="margin-bottom:6px;"><strong>Run-through power</strong> — locomotives from one railroad that continue running on another railroad's own rails under an operating agreement, instead of being swapped out at the interchange.</p>
+        <p style="margin-bottom:6px;"><strong>Foreign power</strong> — a locomotive operating on a railroad other than the one that owns it.</p>
+        <p style="margin-bottom:6px;"><strong>Doubling the hill</strong> — splitting a train into two halves and taking each up a steep grade separately, when it's too heavy to climb in one pull.</p>
+        <p style="margin-bottom:0;"><strong>Local / way freight</strong> — a train that works a subdivision one industry at a time, setting out and picking up cars along the route, rather than running straight through.</p>
+      </div>
+
+      <h4 style="font-size:0.85rem; margin-bottom:6px; color:#111;">Trains &amp; Equipment</h4>
+      <div style="font-size:0.8rem; line-height:1.6; color:#333; margin-bottom:16px;">
+        <p style="margin-bottom:6px;"><strong>Manifest</strong> — a general freight train carrying a mixed variety of car types and commodities, as opposed to a unit train.</p>
+        <p style="margin-bottom:6px;"><strong>Unit train</strong> — a train made up entirely of one car type carrying a single commodity (coal, grain, ethanol, etc.) between one origin and one destination.</p>
+        <p style="margin-bottom:6px;"><strong>Intermodal</strong> — a train carrying shipping containers or truck trailers on well cars or flat cars, for combined rail/truck/ship transport.</p>
+        <p style="margin-bottom:6px;"><strong>Bad order</strong> — a rail car pulled from service due to a mechanical defect, marked and set aside until it's repaired.</p>
+        <p style="margin-bottom:0;"><strong>Cut</strong> — a group of cars coupled together, smaller than a full train, being moved as one unit during switching.</p>
+      </div>
+
+      <h4 style="font-size:0.85rem; margin-bottom:6px; color:#111;">Railfan Culture</h4>
+      <div style="font-size:0.8rem; line-height:1.6; color:#333;">
+        <p style="margin-bottom:6px;"><strong>Fallen flag</strong> — a railroad that no longer exists as an independent company, usually after a merger or acquisition (e.g. Penn Central, Southern Pacific, Conrail).</p>
+        <p style="margin-bottom:6px;"><strong>Heritage unit</strong> — a modern locomotive painted in the colors and scheme of a predecessor or fallen-flag railroad to honor its history.</p>
+        <p style="margin-bottom:6px;"><strong>Patched unit</strong> — a locomotive still wearing its previous owner's paint scheme, with only the reporting marks and number updated ("patched") rather than fully repainted.</p>
+        <p style="margin-bottom:0;"><strong>Roll-by</strong> — when a crew member visually inspects a passing train from trackside (or from another train) and radios back any defects spotted.</p>
       </div>
 
       <h3 style="font-size:0.95rem; margin-bottom:8px; color:#111;">Helpful Links</h3>
