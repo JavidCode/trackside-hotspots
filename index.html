@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <!-- Primary SEO -->
   <title>Trackside Hotspots — Find Railfan Spots, Live Train Cams & Rail Safety Info</title>
@@ -190,7 +190,7 @@
       display: flex;
       flex: 1;
       height: calc(100vh - 76px - 32px);
-      height: calc(100dvh - 76px - 32px); /* same mobile address-bar fix as body */
+      height: calc(100dvh - 76px - 32px - env(safe-area-inset-bottom)); /* same mobile address-bar fix as body, plus room for the footer's safe-area padding above */
       position: relative;
     }
 
@@ -200,10 +200,11 @@
       color: var(--footer-text);
       font-size: 0.72rem;
       padding: 7px 20px;
+      padding-bottom: max(7px, env(safe-area-inset-bottom)); /* reserves room for Safari's bottom toolbar / iPhone home indicator, which can otherwise sit on top of the footer links */
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 32px;
+      min-height: 32px;
       border-top: 1px solid var(--border-color);
       flex-wrap: wrap;
       gap: 8px;
