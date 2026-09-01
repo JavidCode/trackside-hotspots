@@ -564,13 +564,7 @@
           </div>
         </div>
       </div>
-      <button class="admin-toggle-btn" id="sync-sheet-btn" onclick="syncFromGoogleSheet()">🔄 Sync Form Submissions</button>
-      <button class="admin-toggle-btn" id="import-file-btn" onclick="document.getElementById('import-file-input').click()">📁 Import Spreadsheet</button>
-      <a href="#" onclick="downloadImportTemplate(); return false;" style="color:var(--accent); font-size:0.7rem; text-decoration:underline; align-self:center;">Template</a>
       <input type="file" id="import-file-input" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleFileImport(this.files[0])">
-      <button class="admin-toggle-btn" id="admin-btn" onclick="toggleAdminMode()">⚙️ Admin Review</button>
-      <button class="admin-toggle-btn" id="admin-center-btn" onclick="openAdminCenter()" style="display:none;">🎛️ Admin Center</button>
-      <button class="admin-toggle-btn" id="sync-feedback-btn" onclick="syncFeedbackFromGoogleSheet()" style="display:none;">🔄 Sync Feedback</button>
     </div>
   </header>
 
@@ -673,6 +667,14 @@
       <a href="#" onclick="toggleSafetyModal(); return false;">🦺 Rail Safety</a>
       <a href="#" onclick="toggleWikiModal(); return false;">📚 Wiki &amp; Links</a>
       <a href="https://docs.google.com/forms/d/e/1FAIpQLScdvVQHz33ZIihQqVfuHGIr4mHeAou51oJypHFwuRaAQOYaHQ/viewform" target="_blank" rel="noopener">🐛 Report a Bug / Suggest a Feature</a>
+      <a href="#" id="admin-btn" onclick="toggleAdminMode(); return false;">⚙️ Admin</a>
+    </div>
+    <div id="footer-admin-tools" style="display:none; margin-top:10px; gap:6px; flex-wrap:wrap; justify-content:center;">
+      <button class="admin-toggle-btn" id="admin-center-btn" onclick="openAdminCenter()">🎛️ Admin Center</button>
+      <button class="admin-toggle-btn" id="sync-sheet-btn" onclick="syncFromGoogleSheet()">🔄 Sync Form Submissions</button>
+      <button class="admin-toggle-btn" id="sync-feedback-btn" onclick="syncFeedbackFromGoogleSheet()">🔄 Sync Feedback</button>
+      <button class="admin-toggle-btn" id="import-file-btn" onclick="document.getElementById('import-file-input').click()">📁 Import Spreadsheet</button>
+      <a href="#" id="import-template-link" onclick="downloadImportTemplate(); return false;" style="color:var(--accent); font-size:0.7rem; text-decoration:underline; align-self:center;">Template</a>
     </div>
     <div>© 2026 Trackside Hotspots · Not affiliated with any railroad</div>
   </footer>
@@ -786,6 +788,7 @@
         </div>
 
         <div id="admin-tab-content-spots" style="display:none;">
+          <button type="button" onclick="createNewSpotManually()" style="width:100%; background:#2a9d8f; color:#fff; border:none; padding:9px; border-radius:4px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-bottom:12px;">➕ Add New Spot</button>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input type="text" id="all-entries-search" placeholder="Search by name, railroad, state…" oninput="renderAllEntriesPanel()" style="flex:1; margin-top:0; padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
             <select id="all-entries-status-filter" onchange="renderAllEntriesPanel()" style="padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
@@ -1861,11 +1864,36 @@
       renderRailcams();
     }
 
+    // Casual deterrent ONLY, not real security -- this is a static file
+    // with no backend, so this password sits in plain view in the page
+    // source and can be trivially bypassed (viewing source, or just
+    // running toggleAdminMode() directly in the browser console skips the
+    // check entirely). Good enough to keep casual visitors from poking
+    // around admin tools during testing; NOT something to rely on once
+    // this is a real public product -- that needs actual server-side
+    // authentication once the database migration happens.
+    const ADMIN_TEST_PASSWORD = "changeme123"; // TODO: change this before sharing the link
+
     function toggleAdminMode() {
+      if (!isAdminMode) {
+        // Only verify when turning ON. Remembered for this browser tab's
+        // session (clears when the tab/browser closes) so testing doesn't
+        // require re-entering it constantly, but a fresh visit still asks.
+        const alreadyVerified = sessionStorage.getItem('trackside_admin_verified') === 'true';
+        if (!alreadyVerified) {
+          const entered = prompt("Admin password:");
+          if (entered === null) return; // cancelled
+          if (entered !== ADMIN_TEST_PASSWORD) {
+            alert("Incorrect password.");
+            return;
+          }
+          sessionStorage.setItem('trackside_admin_verified', 'true');
+        }
+      }
+
       isAdminMode = !isAdminMode;
       document.getElementById('admin-btn').classList.toggle('active', isAdminMode);
-      document.getElementById('admin-center-btn').style.display = isAdminMode ? 'inline-block' : 'none';
-      document.getElementById('sync-feedback-btn').style.display = isAdminMode ? 'inline-block' : 'none';
+      document.getElementById('footer-admin-tools').style.display = isAdminMode ? 'flex' : 'none';
       renderHotspots();
       if (MAP_LAYERS.localTips.active) renderLocalTips();
       if (MAP_LAYERS.railcams.active) renderRailcams();
@@ -2752,8 +2780,54 @@
     }
 
     function closeSpotReviewModal() {
+      // If this was a brand-new spot created via "Add New Spot" and the
+      // admin closes/cancels without ever saving, remove the empty
+      // placeholder instead of leaving a blank entry sitting in the data.
+      if (pendingNewSpotId && pendingNewSpotId === currentReviewSpotId) {
+        hotspots = hotspots.filter(s => s.id !== pendingNewSpotId);
+        saveSpots();
+        renderHotspots();
+        pendingNewSpotId = null;
+      }
       document.getElementById('spot-review-modal').style.display = 'none';
       currentReviewSpotId = null;
+    }
+
+    // "Add New Spot" for entering one or two spots by hand, without
+    // building a whole spreadsheet for CSV import. Creates a blank spot
+    // immediately (so it exists in the data right away) and opens the
+    // exact same Review screen already used for editing everything else
+    // -- same mini-map, same fields, nothing new to build or learn.
+    let pendingNewSpotId = null;
+    function createNewSpotManually() {
+      const newSpot = {
+        id: "admin_new_" + Date.now(),
+        name: "",
+        railroad: "",
+        state: "",
+        line: "",
+        traffic: "",
+        light: "",
+        freq: "",
+        desc: "",
+        landmark: "",
+        landmarkType: "other",
+        webcamUrl: "",
+        audioFeedUrl: "",
+        categories: [],
+        status: "APPROVED", // admin-added, skips the pending queue like any other admin entry
+        lat: null,
+        lng: null,
+        locationRaw: null,
+        notes: [],
+        photo: null,
+        source: "admin",
+        email: ""
+      };
+      hotspots.push(newSpot);
+      saveSpots();
+      pendingNewSpotId = newSpot.id;
+      openSpotReviewModal(newSpot.id);
     }
 
     // Applies whatever's currently in the form back onto the spot object.
@@ -2858,6 +2932,7 @@
       applyReviewFormToSpot(spot);
       saveSpots();
       renderHotspots();
+      pendingNewSpotId = null; // this spot is now genuinely saved, not abandoned
       closeSpotReviewModal();
       refreshOpenAdminPanels();
     }
@@ -2869,15 +2944,26 @@
       spot.status = 'APPROVED';
       saveSpots();
       renderHotspots();
+      pendingNewSpotId = null; // this spot is now genuinely saved, not abandoned
       closeSpotReviewModal();
       refreshOpenAdminPanels();
     }
 
     function deleteFromReview() {
       if (!currentReviewSpotId) return;
-      if (!confirm("Remove this spot from the map? It'll be marked inactive, not permanently erased — you can restore it later from the All Entries panel.")) return;
-      const spot = hotspots.find(s => s.id === currentReviewSpotId);
-      if (spot) spot.status = 'INACTIVE';
+      const isUnsavedNew = pendingNewSpotId === currentReviewSpotId;
+      if (!confirm(isUnsavedNew
+        ? "Discard this new spot? It was never saved, so nothing to restore later."
+        : "Remove this spot from the map? It'll be marked inactive, not permanently erased — you can restore it later from the All Entries panel."
+      )) return;
+
+      if (isUnsavedNew) {
+        hotspots = hotspots.filter(s => s.id !== currentReviewSpotId);
+        pendingNewSpotId = null;
+      } else {
+        const spot = hotspots.find(s => s.id === currentReviewSpotId);
+        if (spot) spot.status = 'INACTIVE';
+      }
       saveSpots();
       renderHotspots();
       closeSpotReviewModal();
