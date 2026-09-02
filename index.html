@@ -661,7 +661,15 @@
           <strong>Map Legend</strong>
           <button onclick="toggleLegend()" style="background:none; border:none; font-size:1.1rem; cursor:pointer; color:#888;">✕</button>
         </div>
-        <div><span style="display:inline-block; width:16px; height:16px; background:var(--accent); border-radius:50%; border:2px solid #111; vertical-align:middle;"></span> Hotspot (railfan spot)</div>
+        <div style="font-weight:bold; margin-top:2px; margin-bottom:2px;">Hotspot pins, by railroad:</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#002d72; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;CSX</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#1a1a1a; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;Norfolk Southern</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#ffb612; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;Union Pacific</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#f47321; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;BNSF</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#d52b1e; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;Canadian National</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#dc241f; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;Amtrak</div>
+        <div><span style="display:inline-block; width:14px; height:14px; background:#e5a825; border-radius:50% 50% 50% 0; border:2px solid #fff; box-shadow:0 1px 2px rgba(0,0,0,0.4); vertical-align:middle; transform:rotate(-45deg);"></span> &nbsp;Other railroads</div>
+        <div style="border-top:1px solid #eee; margin:6px 0;"></div>
         <div><span style="display:inline-block; width:16px; height:16px; background:#023e8a; border-radius:50%; text-align:center; font-size:10px; line-height:16px; vertical-align:middle;">🚦</span> FRA grade crossing</div>
         <div><span style="display:inline-block; width:16px; height:16px; background:#e76f51; border-radius:50%; text-align:center; font-size:10px; line-height:16px; vertical-align:middle;">🍽️</span> Restaurant/cafe</div>
         <div><span style="display:inline-block; width:16px; height:16px; background:#6f4e37; border-radius:50%; text-align:center; font-size:10px; line-height:16px; vertical-align:middle;">☕</span> Coffee shop</div>
@@ -10277,6 +10285,38 @@
     // Shared category metadata (icon + label) — used for popup badges, the
     // sidebar category filter dropdown, and the Add a Spot form checkboxes
     // all reference this same key set, so they can't drift out of sync.
+    // Colors chosen specifically for visibility as small pins against a
+    // light OpenStreetMap background -- NOT simply reused from
+    // RAILROAD_THEMES, since those accent colors are picked for contrast
+    // against the app's own dark UI and some (near-white NS, pale SP)
+    // would be nearly invisible as a map marker. Real/representative
+    // railroad colors where sensible, falling back to a neutral gold for
+    // anything not explicitly covered rather than trying to give all 30+
+    // possible railroad codes a fully unique, likely indistinguishable hue.
+    const HOTSPOT_RAILROAD_COLORS = {
+      CSX: '#002d72',      // CSX blue
+      NS: '#1a1a1a',       // Norfolk Southern black
+      UP: '#ffb612',       // Union Pacific armour yellow
+      BNSF: '#f47321',     // BNSF orange
+      CN: '#d52b1e',       // Canadian National red
+      CPKC: '#8b0000',     // CPKC dark red
+      AMTK: '#dc241f',     // Amtrak red
+      KCT: '#2a9d8f',
+      FEC: '#003087'
+    };
+    const HOTSPOT_DEFAULT_PIN_COLOR = '#e5a825'; // neutral gold fallback for anything not listed above
+
+    function getHotspotIcon(spot) {
+      const color = HOTSPOT_RAILROAD_COLORS[spot.railroad] || HOTSPOT_DEFAULT_PIN_COLOR;
+      return L.divIcon({
+        className: 'hotspot-pin-icon',
+        html: `<div style="width:18px; height:18px; border-radius:50% 50% 50% 0; background:${color}; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.5); transform:rotate(-45deg);"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 18],
+        popupAnchor: [0, -18]
+      });
+    }
+
     const HOTSPOT_CATEGORY_META = {
       bathroom: '🚻 Restroom', restaurant: '🍽️ Restaurant', coffee: '☕ Coffee', park: '🌳 Park', landmark: '🗺️ Landmark',
       parking: '🅿️ Parking', multi_track: '🛤️ Multiple tracks', golden_hour: '🌇 Golden hour', gas: '⛽ Gas', accessible: '♿ Accessible'
@@ -10493,7 +10533,7 @@
         if (searchableText.includes(query) && hasValidCoords) {
           shownCount++;
           // Render Marker
-          const marker = L.marker([spot.lat, spot.lng]).addTo(map).bindPopup(buildPopupHTML(spot), {
+          const marker = L.marker([spot.lat, spot.lng], { icon: getHotspotIcon(spot) }).addTo(map).bindPopup(buildPopupHTML(spot), {
             autoPan: true, autoPanPadding: [20, 60], keepInView: true, maxWidth: 300
           });
           marker.on('popupopen', () => fetchWeatherForSpot(spot.id, spot.lat, spot.lng));
