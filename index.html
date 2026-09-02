@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABK0lEQVR4nNVXWw6EIAwEst8m7PE8oMeTxAu4H5uabu0TNHHnU0pnmFZScupArXWX1lprOZLLHYxJ12UT497zFBJjBgCxRmqJ0YSoAmqtO0eMT0khxUsi2I/cqTVSjxjJjXIXOd0H+WgDnxzAtvcSc8A5sQs/ArzkUkNagjkRRwmkhqMJtBhrHcdBKU49AAol9R5EHMop2dbThJLV0bj3PPEOaNDq3NO0YQFXo9z122kAnnXZHuDA3wmw7oFbBNDe4Ii8vyDFyxXFoOe0QwJw53rivCittexNbhF4yYduwqvRJYA7ae8lVlL6jkmRMowQ0pmAdSDa4dHaYxwCsAtXE3P7YCJ61kwIAvCGUSHWaH7qAVjkRuqryVN66suIipASWxh+G3JCLDHR1/EH7e3egLRn2ZUAAAAASUVORK5CYII=">
 
   <!-- Primary SEO -->
   <title>Trackside Hotspots — Find Railfan Spots, Live Train Cams & Rail Safety Info</title>
@@ -97,6 +98,11 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+    html {
+      background-color: var(--bg-main); /* safety net: without this, html defaults to plain white, so any tiny
+        gap where body doesn't perfectly cover the full screen (more likely now that viewport-fit=cover lets
+        the page extend into notch/edge areas) shows up as a visible white bar instead of the correct dark color */
     }
     body {
       font-family: var(--body-font);
@@ -471,6 +477,8 @@
         bottom: 0;
         width: 100%;
         height: 75vh;
+        height: 75dvh; /* same mobile address-bar fix as body/app-container -- 75vh overestimates available space when Safari's address bar is showing, which was cutting off/hiding most of the scrollable spot list below the first item */
+        padding-bottom: env(safe-area-inset-bottom); /* keeps the bottom of the drawer clear of Safari's toolbar / the phone's home indicator, same reasoning as the footer fix */
         z-index: 1600;
         border-radius: 16px 16px 0 0;
         border-right: none;
@@ -603,6 +611,7 @@
         <label id="my-submissions-label" style="display:none; align-items:center; gap:6px; margin-top:8px; font-size:0.8rem; color:var(--text-main); cursor:pointer;">
           <input type="checkbox" id="my-submissions-toggle" onchange="filterSpots()"> 👤 Show only my submissions
         </label>
+        <button id="clear-filters-btn" onclick="clearAllFilters()" style="width:100%; margin-top:8px; background:#e76f51; color:#fff; border:none; padding:6px; border-radius:4px; font-size:0.78rem; font-weight:bold; cursor:pointer;">✕ Clear Filters</button>
         <div id="map-layers-panel" style="margin-top:10px; border-top:1px solid var(--border-color); padding-top:10px;">
           <div style="font-size:0.68rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); padding:0 8px 6px;">Base Map</div>
           <div id="basemap-segment" style="display:flex; background:var(--input-bg); border-radius:8px; padding:3px; margin:0 8px 10px; gap:3px;">
@@ -4913,6 +4922,18 @@
         ? `Showing ${shownCount} of ${onMapApproved} spot${onMapApproved === 1 ? '' : 's'} on the map`
         : `${onMapApproved} spot${onMapApproved === 1 ? '' : 's'} on the map` +
           (unplacedCount > 0 ? ` (+${unplacedCount} approved, not yet placed)` : '');
+      document.getElementById('clear-filters-btn').style.opacity = anyFilterActive ? '1' : '0.5'; // still visible either way, just visually indicates whether there's actually anything to clear
+    }
+
+    function clearAllFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('state-filter').value = '';
+      document.getElementById('railroad-filter').value = '';
+      document.getElementById('category-filter').value = '';
+      document.getElementById('webcam-filter-toggle').checked = false;
+      const mySubmissionsCb = document.getElementById('my-submissions-toggle');
+      if (mySubmissionsCb) mySubmissionsCb.checked = false;
+      filterSpots();
     }
 
     function approveSpot(id) {
