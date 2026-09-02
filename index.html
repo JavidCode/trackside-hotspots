@@ -489,6 +489,22 @@
       #sidebar.sidebar-open {
         transform: translateY(0);
       }
+      /* On mobile the filter/layer controls (search, State/Railroad/
+         Category, Map Layers panel, etc.) can grow taller than the drawer
+         itself, squeezing .spot-list's flex:1 share down to nearly zero
+         even though it's still technically in the DOM -- the results
+         count text (which sits just above the list) stays visible since
+         it's small, making it look like the list vanished entirely. Capping
+         the header and letting IT scroll independently guarantees the
+         actual results below always keep a real, usable amount of space. */
+      .sidebar-header {
+        max-height: 50vh;
+        max-height: 50dvh;
+        overflow-y: auto;
+      }
+      .spot-list {
+        min-height: 120px;
+      }
       #mobile-sidebar-toggle {
         display: block;
         position: absolute;
