@@ -873,6 +873,7 @@
               <option value="state">State</option>
               <option value="status">Status</option>
               <option value="source">Source</option>
+              <option value="submittedAt">Submitted</option>
             </select>
             <button type="button" id="all-entries-sort-dir-btn" onclick="toggleAllEntriesSortDir()" style="background:#f0f0f0; border:1px solid #ccc; padding:6px 10px; border-radius:4px; font-size:0.8rem; cursor:pointer;">↑ Asc</button>
           </div>
@@ -884,6 +885,7 @@
         </div>
 
         <div id="admin-tab-content-railcams" style="display:none;">
+          <button type="button" onclick="createNewRailcamManually()" style="width:100%; background:#c0392b; color:#fff; border:none; padding:9px; border-radius:4px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-bottom:12px;">➕ Add New Railcam</button>
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <input type="text" id="all-railcams-search" placeholder="Search by name, railroad, state…" oninput="renderAllRailcamsPanel()" style="flex:1; margin-top:0; padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
             <select id="all-railcams-status-filter" onchange="renderAllRailcamsPanel()" style="padding:6px; font-size:0.8rem; border:1px solid #ccc; border-radius:4px;">
@@ -899,6 +901,7 @@
               <option value="railroad">Railroad</option>
               <option value="state">State</option>
               <option value="status">Status</option>
+              <option value="submittedAt">Submitted</option>
             </select>
             <button type="button" id="all-railcams-sort-dir-btn" onclick="toggleAllRailcamsSortDir()" style="background:#f0f0f0; border:1px solid #ccc; padding:6px 10px; border-radius:4px; font-size:0.8rem; cursor:pointer;">↑ Asc</button>
           </div>
@@ -1135,7 +1138,10 @@
       <label style="display:block; font-size:0.7rem; color:#777; margin-bottom:2px;">Audio Feed URL (Broadcastify, optional)</label>
       <input type="text" id="railcam-review-audio" style="width:100%; margin-bottom:8px;">
       <label style="display:block; font-size:0.7rem; color:#777; margin-bottom:2px;">Provider / Notes</label>
-      <textarea id="railcam-review-notes" rows="3" style="width:100%; margin-bottom:14px;"></textarea>
+      <textarea id="railcam-review-notes" rows="3" style="width:100%; margin-bottom:10px;"></textarea>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:8px; background:#f7f7f7; border-radius:4px; cursor:pointer;">
+        <input type="checkbox" id="railcam-review-verified-free"> <strong>✅ I've personally checked — this camera is genuinely free to watch</strong>
+      </label>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button onclick="closeRailcamReviewModal()" style="flex:1; background:#888; color:#fff; border:none; padding:9px; border-radius:4px; font-weight:bold; cursor:pointer;">Cancel</button>
@@ -1861,6 +1867,7 @@
             <div class="hs-popup">
               <h3>🎥 ${cam.name}</h3>
               <div class="sub">${cam.railroad || ''}${cam.state ? ' · ' + cam.state : ''} · ${cam.provider}</div>
+              ${cam.verifiedFree ? `<div style="color:#2a9d8f; font-weight:bold; font-size:0.75rem; margin-top:4px;">✅ Verified free to watch</div>` : ''}
               ${cam.notes ? `<div class="section">${cam.notes}</div>` : ''}
               ${isRealUrl(cam.streamUrl) ? `<a href="${cam.streamUrl}" target="_blank" rel="noopener" style="display:block; text-align:center; background:#c0392b; color:#fff; text-decoration:none; padding:7px; border-radius:4px; font-size:0.78rem; font-weight:bold; margin-top:6px;">▶️ Watch Live</a>` : ''}
               ${isRealUrl(cam.audioFeedUrl) ? `<a href="${cam.audioFeedUrl}" target="_blank" rel="noopener" style="display:block; text-align:center; background:#495057; color:#fff; text-decoration:none; padding:7px; border-radius:4px; font-size:0.78rem; font-weight:bold; margin-top:6px;">🔊 Listen Live (Scanner Audio)</a>` : ''}
@@ -2180,6 +2187,17 @@
     // Dashboard, which only surfaces things that need action. This is for
     // general management: finding a specific spot, restoring a soft-deleted
     // one, or just seeing the full picture.
+    // Handles both formats we actually see: Google Forms' own timestamp
+    // string (e.g. "9/1/2026 14:32:10") and the ISO format used for
+    // admin-created entries -- falls back to showing the raw text rather
+    // than "Invalid Date" if something unexpected comes through.
+    function formatSubmittedDate(raw) {
+      if (!raw) return '—';
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return raw;
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
     function renderAllEntriesPanel() {
       const search = document.getElementById('all-entries-search').value.toLowerCase();
       const statusFilter = document.getElementById('all-entries-status-filter').value;
@@ -2239,7 +2257,7 @@
                 ${!hasCoords ? '<span style="color:#c0392b; font-size:0.65rem; margin-left:4px;">⚠️ no location</span>' : ''}
                 ${spotHasFlaggedText(spot) ? '<span style="color:#ff6b6b; font-size:0.65rem; margin-left:4px;">🚫 flagged</span>' : ''}
               </div>
-              <div style="font-size:0.72rem; color:#888;">${spot.railroad || ''} ${spot.state ? '· ' + spot.state : ''} · ${{admin:'⚙️ admin', app:'📱 app', google_form_sync:'📋 form'}[spot.source] || spot.source || 'unknown'}</div>
+              <div style="font-size:0.72rem; color:#888;">${spot.railroad || ''} ${spot.state ? '· ' + spot.state : ''} · ${{admin:'⚙️ admin', app:'📱 app', google_form_sync:'📋 form'}[spot.source] || spot.source || 'unknown'} · 📅 ${formatSubmittedDate(spot.submittedAt)}</div>
             </div>
             <div style="display:flex; gap:4px; flex-shrink:0; align-items:center;">
               <select onchange="changeSpotStatus('${spot.id}', this.value)" style="padding:4px 6px; font-size:0.72rem; border:1px solid #ccc; border-radius:3px;">
@@ -2304,9 +2322,11 @@
               <div style="font-weight:bold; font-size:0.85rem;">
                 ${cam.name}
                 <span style="background:${meta.bg}; color:${meta.color}; font-size:0.65rem; font-weight:bold; padding:1px 6px; border-radius:8px; margin-left:6px;">${meta.label}</span>
+                ${cam.verifiedFree ? '<span style="color:#2a9d8f; font-size:0.65rem; margin-left:4px;">✅ verified free</span>' : ''}
                 ${!hasCoords ? '<span style="color:#c0392b; font-size:0.65rem; margin-left:4px;">⚠️ no location</span>' : ''}
               </div>
               <div style="font-size:0.72rem; color:#888;">${cam.railroad || ''} ${cam.state ? '· ' + cam.state : ''} · ${cam.provider || ''}</div>
+              <div style="font-size:0.72rem; color:#888;">📅 ${formatSubmittedDate(cam.submittedAt)}</div>
             </div>
             <div style="display:flex; gap:4px; flex-shrink:0; align-items:center;">
               <select onchange="changeRailcamStatus('${cam.id}', this.value)" style="padding:4px 6px; font-size:0.72rem; border:1px solid #ccc; border-radius:3px;">
@@ -2662,7 +2682,7 @@
 
       document.getElementById('spot-review-summary').innerHTML = `
         <div><strong>Status:</strong> ${spot.status} &nbsp; <strong>Source:</strong> ${{admin:'⚙️ Admin-curated', app:'📱 App submission', google_form_sync:'📋 Google Form sync'}[spot.source] || spot.source || 'unknown'}</div>
-        <div><strong>Submitted by:</strong> ${spot.email || '(none)'}</div>
+        <div><strong>Submitted by:</strong> ${spot.email || '(none)'} &nbsp; <strong>Submitted:</strong> ${formatSubmittedDate(spot.submittedAt)}</div>
         ${spot.locationRaw ? `<div><strong>Original location text:</strong> "${spot.locationRaw}"</div>` : ''}
         ${!hasCoords ? `<div id="review-no-location-warning" style="color:#c0392b; font-weight:bold; margin-top:4px;">⚠️ No location set yet — click the map below to place it.</div>` : ''}
       `;
@@ -2879,7 +2899,8 @@
         notes: [],
         photo: null,
         source: "admin",
-        email: ""
+        email: "",
+        submittedAt: new Date().toISOString()
       };
       hotspots.push(newSpot);
       saveSpots();
@@ -2921,7 +2942,8 @@
         lat: isNaN(lat) ? null : lat,
         lng: isNaN(lng) ? null : lng,
         status: "APPROVED",
-        source: "admin"
+        source: "admin",
+        submittedAt: new Date().toISOString()
       });
       saveRailcams();
       renderRailcams();
@@ -3071,7 +3093,7 @@
       const startLng = hasCoords ? cam.lng : map.getCenter().lng;
 
       document.getElementById('railcam-review-summary').innerHTML = `
-        <div><strong>Source:</strong> ${{admin:'⚙️ Admin-curated', app:'📱 App submission', google_form_sync:'📋 Google Form sync'}[cam.source] || cam.source || 'unknown'}</div>
+        <div><strong>Source:</strong> ${{admin:'⚙️ Admin-curated', app:'📱 App submission', google_form_sync:'📋 Google Form sync'}[cam.source] || cam.source || 'unknown'} &nbsp; <strong>Submitted:</strong> ${formatSubmittedDate(cam.submittedAt)}</div>
         ${cam.locationRaw ? `<div><strong>Original location text:</strong> "${cam.locationRaw}"</div>` : ''}
         ${!hasCoords ? `<div id="railcam-review-no-location-warning" style="color:#c0392b; font-weight:bold; margin-top:4px;">⚠️ No location set yet — search, click the map, or type coordinates below.</div>` : ''}
       `;
@@ -3081,6 +3103,7 @@
       document.getElementById('railcam-review-stream').value = cam.streamUrl || '';
       document.getElementById('railcam-review-audio').value = cam.audioFeedUrl || '';
       document.getElementById('railcam-review-notes').value = cam.notes || cam.provider || '';
+      document.getElementById('railcam-review-verified-free').checked = !!cam.verifiedFree;
       document.getElementById('railcam-review-lat').value = hasCoords ? cam.lat : '';
       document.getElementById('railcam-review-lng').value = hasCoords ? cam.lng : '';
 
@@ -3102,9 +3125,44 @@
       setTimeout(() => railcamReviewMiniMap.invalidateSize(), 50);
     }
 
+    let pendingNewRailcamId = null;
+
     function closeRailcamReviewModal() {
+      // Same pattern as closeSpotReviewModal: if this was a brand-new
+      // railcam created via "Add New Railcam" and never saved, remove
+      // the empty placeholder instead of leaving it sitting in the data.
+      if (pendingNewRailcamId && pendingNewRailcamId === currentReviewRailcamId) {
+        railcams = railcams.filter(c => c.id !== pendingNewRailcamId);
+        saveRailcams();
+        renderRailcams();
+        pendingNewRailcamId = null;
+      }
       document.getElementById('railcam-review-modal').style.display = 'none';
       currentReviewRailcamId = null;
+    }
+
+    function createNewRailcamManually() {
+      const newCam = {
+        id: "cam_admin_new_" + Date.now(),
+        name: "",
+        railroad: "",
+        state: "",
+        provider: "Added manually via Admin Center",
+        streamUrl: "",
+        audioFeedUrl: "",
+        notes: "",
+        verifiedFree: false,
+        lat: null,
+        lng: null,
+        locationRaw: null,
+        status: "APPROVED", // admin-added, skips the pending queue like any other admin entry
+        source: "admin",
+        submittedAt: new Date().toISOString()
+      };
+      railcams.push(newCam);
+      saveRailcams();
+      pendingNewRailcamId = newCam.id;
+      openRailcamReviewModal(newCam.id);
     }
 
     async function searchRailcamReviewLocation() {
@@ -3156,6 +3214,7 @@
       const enteredAudio = document.getElementById('railcam-review-audio').value.trim();
       cam.audioFeedUrl = isRealUrl(enteredAudio) ? enteredAudio : '';
       cam.notes = document.getElementById('railcam-review-notes').value;
+      cam.verifiedFree = document.getElementById('railcam-review-verified-free').checked;
       const lat = parseFloat(document.getElementById('railcam-review-lat').value);
       const lng = parseFloat(document.getElementById('railcam-review-lng').value);
       if (!isNaN(lat) && !isNaN(lng)) {
@@ -3171,6 +3230,7 @@
       applyRailcamReviewFormToCam(cam);
       saveRailcams();
       renderRailcams();
+      pendingNewRailcamId = null; // this railcam is now genuinely saved, not abandoned
       closeRailcamReviewModal();
       if (isAdminMode) renderAdminDashboard();
     }
@@ -3182,6 +3242,7 @@
       cam.status = 'APPROVED';
       saveRailcams();
       renderRailcams();
+      pendingNewRailcamId = null; // this railcam is now genuinely saved, not abandoned
       closeRailcamReviewModal();
       if (isAdminMode) renderAdminDashboard();
     }
@@ -3190,6 +3251,7 @@
       if (!currentReviewRailcamId) return;
       if (!confirm("Reject/delete this railcam? This can't be undone.")) return;
       railcams = railcams.filter(c => c.id !== currentReviewRailcamId);
+      pendingNewRailcamId = null; // already removed above, nothing left for closeRailcamReviewModal to clean up
       saveRailcams();
       renderRailcams();
       closeRailcamReviewModal();
@@ -3329,7 +3391,7 @@
           ${isAdminMode ? `
             <div style="margin-top:8px; padding:6px; background:#fff3cd; border-radius:4px; font-size:0.75rem;">
               <div>Status: <strong>${spot.status}</strong></div>
-              <div>Submitted by: ${spot.email || '(none)'}</div>
+              <div>Submitted by: ${spot.email || '(none)'} · ${formatSubmittedDate(spot.submittedAt)}</div>
               <div>Source: <strong>${{admin: '⚙️ Admin-curated', app: '📱 App submission', google_form_sync: '📋 Google Form sync'}[spot.source] || spot.source || 'unknown'}</strong></div>
               ${spot.status === 'PENDING' ? `<button onclick="approveSpot('${spot.id}')" style="margin-top:4px; background:#2a9d8f; color:#fff; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">Approve</button>` : ''}
               <button onclick="openSpotReviewModal('${spot.id}')" style="margin-top:4px; background:#023e8a; color:#fff; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">✏️ Edit</button>
@@ -4336,6 +4398,7 @@
             locationRaw: coords ? null : locationText, // kept so the admin can manually geocode/place it
             notes: [],
             photo: get(row, 'photoUrl') || null,
+            submittedAt: timestamp,
             source: "google_form_sync"
           };
 
@@ -4363,6 +4426,7 @@
               lng: coords ? coords.lng : null,
               locationRaw: coords ? null : locationText,
               status: "PENDING", // a submitted cam's free/paid status needs human verification
+              submittedAt: timestamp,
               source: "google_form_sync"
             });
             camsAdded++;
@@ -5649,6 +5713,33 @@
       document.addEventListener('touchmove', (e) => { if (dragging) onMove(e.touches[0].clientY); }, { passive: true });
       document.addEventListener('touchend', stopDrag);
     })();
+
+    // One-time backfill: submittedAt was added to the sync code after a
+    // lot of real data had already been synced in, so anything imported
+    // before that point never got the field set. The original timestamp
+    // is still recoverable, though -- it's embedded in importKey
+    // ("timestamp|email"), just never split back out into its own field
+    // until now. Safe to run on every load: only touches items that are
+    // actually missing submittedAt, so it's a no-op once everything's
+    // been backfilled once.
+    function backfillSubmittedDates() {
+      let fixed = 0;
+      [...hotspots, ...railcams].forEach(item => {
+        if (!item.submittedAt && item.importKey) {
+          const recoveredTimestamp = item.importKey.split('|')[0];
+          if (recoveredTimestamp) {
+            item.submittedAt = recoveredTimestamp;
+            fixed++;
+          }
+        }
+      });
+      if (fixed > 0) {
+        saveSpots();
+        saveRailcams();
+        console.log(`Backfilled submission dates for ${fixed} item(s) from their import key.`);
+      }
+    }
+    backfillSubmittedDates();
 
     // Initial Load
     renderHotspots();
