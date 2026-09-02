@@ -10542,6 +10542,7 @@
           // Render Sidebar Item
           const item = document.createElement('div');
           item.className = 'spot-item';
+          item.style.borderLeftColor = HOTSPOT_RAILROAD_COLORS[spot.railroad] || HOTSPOT_DEFAULT_PIN_COLOR;
           item.onclick = () => {
             map.flyTo([spot.lat, spot.lng], 16);
             marker.openPopup();
